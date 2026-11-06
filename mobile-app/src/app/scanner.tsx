@@ -17,7 +17,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAttendance } from "../context/AttendanceContext";
 
-const API_URL = "http://192.168.137.99:3000/api/asistencias";
+//const API_URL = "http://192.168.137.99:3000/api/asistencias";
+
+const API_URL = "https://pase-lista-full.onrender.com/api/asistencias";
 const DOCENTE_ID = "maestro-001";
 
 type Student = {
