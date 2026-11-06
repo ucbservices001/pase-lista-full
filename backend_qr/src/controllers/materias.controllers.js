@@ -1,5 +1,5 @@
 //método post para insertar materias
-import prisma from "../../prisma.config.ts";
+//import prisma from "../../prisma.config.ts";
 //función para crear una materia
 export const crearMateria=async(req,res)=>{
     try{
