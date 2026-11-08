@@ -1,42 +1,40 @@
 import { useState } from "react";
 import "../screens/Login.css";
 import { useNavigate, Link } from "react-router-dom";
-import axios from "axios"; // Importamos axios
+import api from "../api"; // <--- Importamos la instancia centralizada que apunta al backend en Render
 
 function Login() {
     const navigation = useNavigate();
 
-    //* 1. Estados para capturar el correo, la contraseña y posibles errores
+    // Estados para capturar el correo, la contraseña y posibles errores
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState(null);
 
     const inicializarSesion = async (e) => {
-        e.preventDefault(); // Evita recargas si alguna vez lo envuelves en un <form>
+        e.preventDefault(); 
         setError(null); // Limpiamos errores previos
 
         try {
-            //* 2. Hacemos la petición POST al endpoint del backend
-            const response = await axios.post("http://localhost:3000/api/auth/login", {
+            // Petición POST utilizando la instancia global 'api'
+            const response = await api.post("/auth/login", {
                 email: email,
                 password: password
             });
 
-            //* 3. Verificamos si el backend respondió con éxito
+            // Verificamos si el backend respondió con éxito
             if (response.data.success) {
-                //* Extraemos el token que viene en la respuesta (como se ve en tu Postman)
                 const tokenReal = response.data.token;
 
-                //* 4. Guardamos el token real en el almacenamiento local
+                // Guardamos el token en el almacenamiento local
                 localStorage.setItem('token', tokenReal);
 
-                //* 5. Redirigimos de forma segura al dashboard
+                // Redirigimos al dashboard
                 navigation("/dashboard");
             }
         } catch (error) {
-            //* 6. Manejamos los errores (ej. 401 Correo o contraseña incorrectos)
+            // Manejamos los errores del servidor
             if (error.response && error.response.data) {
-                //* Muestra el mensaje de error que mandaste desde tu backend
                 setError(error.response.data.message); 
             } else {
                 setError("Error de conexión con el servidor.");
@@ -64,7 +62,6 @@ function Login() {
                 {/* Mostrar mensaje de error visualmente si las credenciales fallan */}
                 {error && <p style={{ color: "red", fontSize: "14px" }}>{error}</p>}
 
-                {/* Vinculamos los inputs con nuestro estado (Controladores) */}
                 <input
                     type="email"
                     placeholder="Correo electrónico"
