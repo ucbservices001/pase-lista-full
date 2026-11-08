@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import TablaMaestros from './TablaMaestros';
-// IMPORTANTE: Asegúrate de que este archivo exista en la ruta indicada
 import { importarMaestros } from '../service/maestroService.js';
 
 function Profesores() {
     const [maestros, setMaestros] = useState([]); 
-    const [vista, setVista] = useState('lista'); // 'lista' o 'importar'
+    const [vista, setVista] = useState('lista');
 
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
@@ -33,7 +32,6 @@ function Profesores() {
         if (maestros.length === 0) return;
 
         try {
-            // Se llama a la función importada del servicio
             const result = await importarMaestros(maestros);
 
             if (result.success) {

@@ -1,9 +1,6 @@
-import axios from "axios";
+import api from "../api"; // <--- Instancia centralizada
 import { useState, useEffect } from "react";
-
 import RegistrarAsistencia from "./RegistrarAsistencia"; 
-
-const API_URL = "http://localhost:3000/api";
 
 const ESTILOS_ESTADO = {
     PRESENTE: { dot: "bg-emerald-500", text: "text-emerald-700 bg-emerald-50" },
@@ -25,9 +22,7 @@ function obtenerIniciales(nombre, apellido) {
 }
 
 function Asistencia() {
-    // NUEVO ESTADO: Controla si vemos "consultar" o "registrar"
     const [vista, setVista] = useState("consultar"); 
-
     const [modo, setModo] = useState("todos");
     const [matricula, setMatricula] = useState("");
     const [fecha, setFecha] = useState("");
@@ -42,7 +37,7 @@ function Asistencia() {
         setMensaje("");
         setAlumnoInfo(null);
         try {
-            const respuesta = await axios.get(`${API_URL}/asistencias`);
+            const respuesta = await api.get("/asistencias");
             const datos = respuesta.data.data || [];
             setAsistencias(datos);
             if (datos.length === 0) {
@@ -65,7 +60,7 @@ function Asistencia() {
         setCargando(true);
         setMensaje("");
         try {
-            const respuesta = await axios.get(`${API_URL}/asistencias/alumno/${matricula.trim()}`);
+            const respuesta = await api.get(`/asistencias/alumno/${matricula.trim()}`);
             setAsistencias(respuesta.data.data || []);
             setAlumnoInfo(respuesta.data.alumno || null);
         } catch (error) {
@@ -91,7 +86,7 @@ function Asistencia() {
         setMensaje("");
         alumnoInfo && setAlumnoInfo(null);
         try {
-            const respuesta = await axios.get(`${API_URL}/asistencias/fecha/${fecha}`);
+            const respuesta = await api.get(`/asistencias/fecha/${fecha}`);
             setAsistencias(respuesta.data.data || []);
         } catch (error) {
             console.error("Error por fecha:", error);
@@ -127,8 +122,6 @@ function Asistencia() {
 
     return (
         <div className="w-full max-w-6xl mx-auto px-4 py-6 box-border space-y-8">
-            
-            {/* Encabezado Principal adaptado para incluir el botón dinámico */}
             <div className="border-b border-slate-200 pb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">Asistencias</h1>
@@ -137,7 +130,6 @@ function Asistencia() {
                     </p>
                 </div>
                 
-                {/* Muestra el botón de agregar (+) solo si no estamos ya en la vista de registro */}
                 {vista === "consultar" && (
                     <button
                         onClick={() => setVista("registrar")}
@@ -149,7 +141,6 @@ function Asistencia() {
                 )}
             </div>
 
-            {/* RENDERIZADO CONDICIONAL DE VISTAS */}
             {vista === "registrar" ? (
                 <RegistrarAsistencia 
                     alVolver={() => setVista("consultar")} 
@@ -159,7 +150,6 @@ function Asistencia() {
                 />
             ) : (
                 <>
-                    {/* Contenedor de Filtros y Búsqueda */}
                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-6">
                         <div>
                             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4">
@@ -211,11 +201,9 @@ function Asistencia() {
                             </div>
                         </div>
 
-                        {/* Formulario de Entrada Dinámico */}
                         {modo !== "todos" && (
                             <div className="pt-4 border-t border-slate-100">
                                 <div className="flex flex-col sm:flex-row gap-3 max-w-2xl items-end">
-                                    
                                     {modo === "matricula" && (
                                         <div className="flex-1 w-full">
                                             <label className="block text-xs font-medium text-slate-500 mb-1.5">
@@ -264,7 +252,6 @@ function Asistencia() {
                         )}
                     </div>
 
-                    {/* Info Tarjeta del Alumno */}
                     {alumnoInfo && (
                         <div className="p-5 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50/30 border border-blue-100 shadow-sm flex items-center gap-4">
                             <div className="h-12 w-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-base shadow-sm shrink-0">
@@ -282,7 +269,6 @@ function Asistencia() {
                         </div>
                     )}
 
-                    {/* Estados de Carga y Mensajes Vacíos */}
                     {cargando && (
                         <div className="flex flex-col items-center gap-3 py-16 bg-white rounded-xl border border-slate-200 shadow-sm justify-center w-full">
                             <span className="animate-spin text-3xl">⏳</span>
@@ -297,7 +283,6 @@ function Asistencia() {
                         </div>
                     )}
 
-                    {/* Tabla de Resultados */}
                     {!cargando && asistencias.length > 0 && (
                         <div className="space-y-3">
                             <div className="flex justify-between items-center px-1">

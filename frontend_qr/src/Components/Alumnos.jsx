@@ -1,7 +1,5 @@
-
-
 import { useEffect, useState, useRef } from "react";
-import axios from "axios";
+import api from "../api"; // <--- Instancia centralizada
 import { Plus, X, Edit, Trash2, Search, Filter, QrCode, Upload, CheckCircle, AlertTriangle } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -38,7 +36,7 @@ function Alumnos() {
 
     const obtenerAlumnos = async () => {
         try {
-            const respuesta = await axios.get("http://localhost:3000/api/alumnos");
+            const respuesta = await api.get("/alumnos");
             setAlumnos(respuesta.data.data || []);
         } catch (error) {
             console.log("Error al cargar alumnos:", error);
@@ -47,7 +45,7 @@ function Alumnos() {
 
     const obtenerGrupos = async () => {
         try {
-            const respuesta = await axios.get("http://localhost:3000/api/grupos");
+            const respuesta = await api.get("/grupos");
             setGrupos(respuesta.data.data || []);
         } catch (error) {
             console.log("Error al cargar grupos:", error);
@@ -100,10 +98,10 @@ function Alumnos() {
         e.preventDefault();
         try {
             if (modoEdicion) {
-                await axios.put(`http://localhost:3000/api/alumnos/${alumnoActualId}`, formulario);
+                await api.put(`/alumnos/${alumnoActualId}`, formulario);
                 alert("Alumno actualizado correctamente");
             } else {
-                await axios.post("http://localhost:3000/api/alumnos", formulario);
+                await api.post("/alumnos", formulario);
                 alert("Alumno creado correctamente");
             }
 
@@ -118,7 +116,7 @@ function Alumnos() {
     const eliminarAlumno = async (id) => {
         if (!window.confirm("¿Estás seguro de que deseas eliminar este alumno?")) return;
         try {
-            await axios.delete(`http://localhost:3000/api/alumnos/${id}`);
+            await api.delete(`/alumnos/${id}`);
             alert("Alumno eliminado correctamente");
             obtenerAlumnos();
         } catch (error) {
@@ -127,7 +125,6 @@ function Alumnos() {
         }
     };
 
- 
     const manejarSeleccionArchivo = (e) => {
         const archivo = e.target.files[0];
         if (!archivo) return;
@@ -147,7 +144,6 @@ function Alumnos() {
                 }
 
                 const datosFormateados = listaRegistros.map((fila, index) => {
-                    // Mapeo flexible para capturar las cabeceras exactas de tu Excel
                     const matricula = String(fila.MATRÍCULA || fila.matricula || fila.Matricula || "").trim();
                     const nombre = String(fila.NOMBRE || fila.nombre || fila.Nombre || "").trim();
                     const apellidoPaterno = String(fila["AP. PATERNO"] || fila.apellidoPaterno || fila.ApellidoPaterno || fila.APELLIDO_PATERNO || fila.Apellidos || "").trim();
@@ -194,24 +190,18 @@ function Alumnos() {
         setAlumnosPreview(nuevosDatos);
     };
 
- 
-    
-const confirmarImportacionMasiva = async () => {
-    const validos = alumnosPreview.filter(
-        (a) => a.esValido
-    );
+    const confirmarImportacionMasiva = async () => {
+        const validos = alumnosPreview.filter((a) => a.esValido);
 
-    if (validos.length === 0) {
-        alert("No hay registros válidos para importar.");
-        return;
-    }
+        if (validos.length === 0) {
+            alert("No hay registros válidos para importar.");
+            return;
+        }
 
-    setImportando(true);
+        setImportando(true);
 
-    try {
-        const respuesta = await axios.post(
-            "http://localhost:3000/api/alumnos/carga-masiva",
-            {
+        try {
+            const respuesta = await api.post("/alumnos/carga-masiva", {
                 alumnos: validos.map((alumno) => ({
                     matricula: alumno.matricula.trim(),
                     nombre: alumno.nombre.trim(),
@@ -221,65 +211,45 @@ const confirmarImportacionMasiva = async () => {
                     telefono: alumno.telefono.trim(),
                     grupoId: alumno.grupoId.trim()
                 }))
+            });
+
+            const datos = respuesta.data;
+
+            let mensaje =
+                `${datos.message}\n\n` +
+                `Registros recibidos: ${datos.recibidos}\n` +
+                `Importados: ${datos.importados}\n` +
+                `Omitidos: ${datos.omitidos}\n` +
+                `Errores: ${datos.errores}`;
+
+            const detalle = datos.detalle;
+
+            if (detalle?.omitidos?.length) {
+                mensaje += "\n\n--- OMITIDOS ---\n";
+                mensaje += detalle.omitidos
+                    .map((item) => `Fila ${item.fila} (${item.matricula}): ${item.motivo}`)
+                    .join("\n");
             }
-        );
 
-        const datos = respuesta.data;
+            if (detalle?.errores?.length) {
+                mensaje += "\n\n--- ERRORES ---\n";
+                mensaje += detalle.errores
+                    .map((item) => `Fila ${item.fila} (${item.matricula}): ${item.motivo}`)
+                    .join("\n");
+            }
 
-        // Mostrar resultados reales del backend.
-        let mensaje =
-            `${datos.message}\n\n` +
-            `Registros recibidos: ${datos.recibidos}\n` +
-            `Importados: ${datos.importados}\n` +
-            `Omitidos: ${datos.omitidos}\n` +
-            `Errores: ${datos.errores}`;
+            alert(mensaje);
 
-        const detalle = datos.detalle;
+            setMostrarModalPreview(false);
+            await obtenerAlumnos();
 
-        if (detalle?.omitidos?.length) {
-            mensaje += "\n\n--- OMITIDOS ---\n";
-
-            mensaje += detalle.omitidos
-                .map(
-                    (item) =>
-                        `Fila ${item.fila} (${item.matricula}): ${item.motivo}`
-                )
-                .join("\n");
+        } catch (error) {
+            console.error("Error en la importación masiva:", error.response?.data || error);
+            alert(error.response?.data?.message || "Error al importar alumnos. Revisa la consola del backend.");
+        } finally {
+            setImportando(false);
         }
-
-        if (detalle?.errores?.length) {
-            mensaje += "\n\n--- ERRORES ---\n";
-
-            mensaje += detalle.errores
-                .map(
-                    (item) =>
-                        `Fila ${item.fila} (${item.matricula}): ${item.motivo}`
-                )
-                .join("\n");
-        }
-
-        alert(mensaje);
-
-        // Cerrar la vista previa y actualizar la tabla.
-        setMostrarModalPreview(false);
-        await obtenerAlumnos();
-
-    } catch (error) {
-        console.error(
-            "Error en la importación masiva:",
-            error.response?.data || error
-        );
-
-        alert(
-            error.response?.data?.message ||
-            "Error al importar alumnos. Revisa la consola del backend."
-        );
-    } finally {
-        setImportando(false);
-    }
-};
-
-
+    };
 
     const alumnosFiltrados = alumnos.filter((a) => {
         const textoBusqueda = busqueda.toLowerCase();
@@ -430,7 +400,7 @@ const confirmarImportacionMasiva = async () => {
                 </table>
             </div>
 
-            {/* Modal para Crear y Editar */}
+            {/* Modal Crear/Editar */}
             {mostrarModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
@@ -564,18 +534,17 @@ const confirmarImportacionMasiva = async () => {
                 </div>
             )}
 
-            {/* Modal de Vista Previa Editable para Importación Masiva */}
+            {/* Modal Preview Importación */}
             {mostrarModalPreview && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl p-6 w-full max-w-5xl shadow-2xl flex flex-col max-h-[90vh]">
-                        
                         <div className="flex justify-between items-center pb-4 mb-4 border-b border-gray-100">
                             <div>
                                 <h2 className="text-xl font-bold text-slate-800">
                                     Vista Previa de Importación Masiva
                                 </h2>
                                 <p className="text-xs text-slate-500">
-                                    Revisa, edita celdas si es necesario y verifica que los campos obligatorios (Matrícula, Nombre y Grupo) sean válidos.
+                                    Revisa, edita celdas si es necesario y verifica que los campos obligatorios sean válidos.
                                 </p>
                             </div>
                             <button
@@ -605,11 +574,11 @@ const confirmarImportacionMasiva = async () => {
                                         <tr key={item.idTemp} className={item.esValido ? "hover:bg-slate-50" : "bg-red-50 hover:bg-red-100/50"}>
                                             <td className="p-3 text-center">
                                                 {item.esValido ? (
-                                                    <span className="inline-flex items-center gap-1 text-emerald-600 text-xs font-semibold" title="Registro válido">
+                                                    <span className="inline-flex items-center gap-1 text-emerald-600 text-xs font-semibold">
                                                         <CheckCircle size={16} /> Válido
                                                     </span>
                                                 ) : (
-                                                    <span className="inline-flex items-center gap-1 text-red-600 text-xs font-semibold" title="Faltan datos obligatorios (Matrícula, Nombre o Grupo)">
+                                                    <span className="inline-flex items-center gap-1 text-red-600 text-xs font-semibold">
                                                         <AlertTriangle size={16} /> Error
                                                     </span>
                                                 )}
@@ -705,7 +674,7 @@ const confirmarImportacionMasiva = async () => {
                 </div>
             )}
 
-            {/* Modal para Visualizar el Código QR */}
+            {/* Modal Código QR */}
             {mostrarModalQR && alumnoSeleccionadoQR && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center">

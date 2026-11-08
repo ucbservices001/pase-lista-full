@@ -1,69 +1,68 @@
-// C:\Users\ucbcr\OneDrive\Escritorio\Repositorios\pase_lista\frontend_qr\src\services\maestroService.js
-const API_URL = 'http://localhost:3000/api';
-
+import api from "../api"; // <--- Importamos la instancia centralizada de Axios
 
 export const getMaestros = async () => {
-    const res = await fetch(`${API_URL}/maestros`);
-
-    const resultado = await res.json();
-
-    console.log("RESPUESTA API MAESTROS:", resultado);
-
-    if (!res.ok || resultado.ok === false) {
+    try {
+        const respuesta = await api.get("/maestros");
+        console.log("RESPUESTA API MAESTROS:", respuesta.data);
+        return respuesta.data;
+    } catch (error) {
+        console.error("Error al obtener maestros:", error.response?.data || error.message);
         throw new Error(
-            resultado.msg ||
-            resultado.message ||
+            error.response?.data?.msg ||
+            error.response?.data?.message ||
             "No fue posible obtener los maestros"
         );
     }
-
-    return resultado;
 };
 
-
 export const createMaestro = async (maestro) => {
-    const res = await fetch(`${API_URL}/maestros`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+    try {
+        const respuesta = await api.post("/maestros", {
             nombre: maestro.nombre,
             email: maestro.email,
             password: maestro.password,
             numeroEmpleado: maestro.numeroEmpleado,
             telefono: maestro.telefono || null
-        }),
-    });
-    return await res.json();
+        });
+        return respuesta.data;
+    } catch (error) {
+        console.error("Error al crear maestro:", error.response?.data || error);
+        return null;
+    }
 };
 
 export const updateMaestro = async (id, maestro) => {
-    const res = await fetch(`${API_URL}/maestros/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+    try {
+        const respuesta = await api.put(`/maestros/${id}`, {
             nombre: maestro.nombre,
             email: maestro.email, 
             numeroEmpleado: maestro.numeroEmpleado,
             telefono: maestro.telefono
-        }),
-    });
-    return await res.json();
+        });
+        return respuesta.data;
+    } catch (error) {
+        console.error("Error al actualizar maestro:", error.response?.data || error);
+        return null;
+    }
 };
 
 export const deleteMaestro = async (id) => {
-    const res = await fetch(`${API_URL}/maestros/${id}`, {
-        method: 'DELETE',
-    });
-    return await res.json();
+    try {
+        const respuesta = await api.delete(`/maestros/${id}`);
+        return respuesta.data;
+    } catch (error) {
+        console.error("Error al eliminar maestro:", error.response?.data || error);
+        return null;
+    }
 };
 
 // --- Parte o implementación Diego C. A. ---
-// Nueva función para importar masivamente
 export const importarMaestros = async (datos) => {
-    const res = await fetch(`${API_URL}/maestros/importar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(datos),
-    });
-    return await res.json();
+    try {
+        const respuesta = await api.post("/maestros/importar", datos);
+        return respuesta.data;
+    } catch (error) {
+        console.error("Error al importar maestros:", error.response?.data || error);
+        return { success: false, msg: error.response?.data?.msg || "Error de conexión en importación" };
+    }
 };

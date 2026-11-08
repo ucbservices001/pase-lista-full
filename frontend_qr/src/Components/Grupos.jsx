@@ -1,7 +1,5 @@
-
-
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { Plus, X } from "lucide-react";
 
 function Grupos() {
@@ -18,35 +16,18 @@ function Grupos() {
         obtenerGrupos();
     }, []);
 
-    // Función para obtener los grupos de la base de datos (Usando GET correctamente)
-
-const obtenerGrupos = async () => {
-    try {
-        const respuesta = await axios.get(
-            "http://localhost:3000/api/grupos"
-        );
-
-        // Verificar qué está enviando el backend
-        console.log("RESPUESTA COMPLETA:", respuesta.data);
-
-        const listaGrupos = Array.isArray(respuesta.data)
-            ? respuesta.data
-            : respuesta.data.data || [];
-
-        console.log("GRUPOS RECIBIDOS:", listaGrupos);
-
-        setGrupos(listaGrupos);
-
-    } catch (error) {
-        console.error(
-            "Error al cargar grupos:",
-            error.response?.data || error.message
-        );
-
-        setGrupos([]);
-    }
-};
-
+    const obtenerGrupos = async () => {
+        try {
+            const respuesta = await api.get("/grupos");
+            const listaGrupos = Array.isArray(respuesta.data)
+                ? respuesta.data
+                : respuesta.data.data || [];
+            setGrupos(listaGrupos);
+        } catch (error) {
+            console.error("Error al cargar grupos:", error.response?.data || error.message);
+            setGrupos([]);
+        }
+    };
 
     const handleChange = (e) => {
         setFormulario({
@@ -55,71 +36,48 @@ const obtenerGrupos = async () => {
         });
     };
 
-    // Función para guardar un nuevo grupo (Enviando carreraId por defecto en el backend)
-  
-    
-const guardarGrupo = async (e) => {
-    e.preventDefault();
+    const guardarGrupo = async (e) => {
+        e.preventDefault();
 
-    try {
-        const datosAEnviar = {
-            id: formulario.id.trim(),
-            nombre: formulario.nombre.trim(),
-            cuatrimestre: Number(formulario.cuatrimestre),
-            turno: formulario.turno.trim()
-        };
+        try {
+            const datosAEnviar = {
+                id: formulario.id.trim(),
+                nombre: formulario.nombre.trim(),
+                cuatrimestre: Number(formulario.cuatrimestre),
+                turno: formulario.turno.trim()
+            };
 
-        if (
-            !datosAEnviar.id ||
-            !datosAEnviar.nombre ||
-            !Number.isInteger(datosAEnviar.cuatrimestre) ||
-            datosAEnviar.cuatrimestre < 1 ||
-            !datosAEnviar.turno
-        ) {
-            alert("Completa correctamente todos los campos");
-            return;
+            if (
+                !datosAEnviar.id ||
+                !datosAEnviar.nombre ||
+                !Number.isInteger(datosAEnviar.cuatrimestre) ||
+                datosAEnviar.cuatrimestre < 1 ||
+                !datosAEnviar.turno
+            ) {
+                alert("Completa correctamente todos los campos");
+                return;
+            }
+
+            const respuesta = await api.post("/grupos", datosAEnviar);
+            alert(respuesta.data.msg || "Grupo creado correctamente");
+
+            setFormulario({
+                id: "",
+                nombre: "",
+                cuatrimestre: "",
+                turno: ""
+            });
+
+            setMostrarModal(false);
+            await obtenerGrupos();
+        } catch (error) {
+            console.error("Error al guardar grupo:", error.response?.data || error);
+            alert(error.response?.data?.msg || "No se pudo guardar el grupo");
         }
-
-        console.log("Enviando grupo:", datosAEnviar);
-
-        const respuesta = await axios.post(
-            "http://localhost:3000/api/grupos",
-            datosAEnviar
-        );
-
-        alert(
-            respuesta.data.msg ||
-            "Grupo creado correctamente"
-        );
-
-        setFormulario({
-            id: "",
-            nombre: "",
-            cuatrimestre: "",
-            turno: ""
-        });
-
-        setMostrarModal(false);
-
-        await obtenerGrupos();
-
-    } catch (error) {
-        console.error(
-            "Error al guardar grupo:",
-            error.response?.data || error
-        );
-
-        alert(
-            error.response?.data?.msg ||
-            "No se pudo guardar el grupo"
-        );
-    }
-};
-
+    };
 
     return (
         <div className="w-full max-w-none px-8 py-6">
-            {/* Título y Botón */}
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold text-slate-800">
                     Gestión de Grupos
@@ -134,7 +92,6 @@ const guardarGrupo = async (e) => {
                 </button>
             </div>
 
-            {/* Tabla de Grupos */}
             <div className="bg-white rounded-xl shadow-lg overflow-x-auto w-full">
                 <table className="min-w-[800px] w-full">
                     <thead className="bg-slate-200">
@@ -166,11 +123,9 @@ const guardarGrupo = async (e) => {
                 </table>
             </div>
 
-            {/* Ventana flotante (Modal) para agregar */}
             {mostrarModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
-                        
                         <div className="flex justify-between items-center pb-4 mb-4 border-b border-gray-100">
                             <h2 className="text-xl font-bold text-slate-800">
                                 Agregar Nuevo Grupo
@@ -252,7 +207,6 @@ const guardarGrupo = async (e) => {
                                 </button>
                             </div>
                         </form>
-
                     </div>
                 </div>
             )}
