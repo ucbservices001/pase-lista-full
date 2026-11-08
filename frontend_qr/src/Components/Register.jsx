@@ -1,7 +1,7 @@
 import "../screens/Login.css";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios"; // 1. Importamos axios
+import api from "../api"; // <--- 1. Importamos nuestra instancia centralizada de api
 
 function Register() {
     const navigate = useNavigate();
@@ -11,7 +11,7 @@ function Register() {
     const [password, setPassword] = useState("");
     const [confirmar, setConfirmar] = useState("");
     
-    // 2. Agregamos el estado para el ROL (tu backend requiere "ALUMNO" o "MAESTRO")
+    // 2. Estado para el ROL ("ALUMNO" o "MAESTRO")
     const [rol, setRol] = useState("ALUMNO"); 
     
     // 3. Estados para manejar mensajes visuales de éxito o error
@@ -30,26 +30,26 @@ function Register() {
         }
 
         try {
-            // 4. Hacemos la petición POST al backend
-            const response = await axios.post("http://localhost:3000/api/auth/register", {
+            // 4. Hacemos la petición POST al backend usando la instancia global 'api'
+            const response = await api.post("/auth/register", {
                 nombre: nombre,
                 email: correo, // El backend espera 'email', le pasamos nuestro estado 'correo'
                 password: password,
                 rol: rol       // Pasamos el rol seleccionado
             });
 
-            // 5. Si todo salió bien (código 201)
+            // 5. Si todo salió bien
             if (response.data.success) {
                 setSuccess("Cuenta creada correctamente. Redirigiendo al login...");
                 
-                // Esperamos 2 segundos para que el usuario lea el mensaje antes de redirigir
+                // Esperamos 2 segundos antes de redirigir
                 setTimeout(() => {
                     navigate("/");
                 }, 2000);
             }
 
         } catch (error) {
-            // 6. Manejamos los errores (Ej. 400 "El usuario ya existe")
+            // 6. Manejamos los errores del servidor
             if (error.response && error.response.data) {
                 setError(error.response.data.message);
             } else {
@@ -109,7 +109,7 @@ function Register() {
                         required
                     />
 
-                    {/* Selector de Rol (Obligatorio para tu Backend) */}
+                    {/* Selector de Rol */}
                     <select 
                         value={rol} 
                         onChange={(e) => setRol(e.target.value)}
