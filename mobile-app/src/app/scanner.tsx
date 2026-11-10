@@ -16,10 +16,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAttendance } from "../context/AttendanceContext";
+import { ASISTENCIAS_URL as API_URL, REQUEST_TIMEOUT_MS } from "../config/api";
 
-//const API_URL = "http://192.168.137.99:3000/api/asistencias";
-
-const API_URL = "https://pase-lista-full.onrender.com/api/asistencias";
 const DOCENTE_ID = "maestro-001";
 
 type Student = {
@@ -187,7 +185,7 @@ export default function Scanner() {
 
     const controller = new AbortController();
     request.current = controller;
-    const timeout = setTimeout(() => controller.abort(), 15000);
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
     try {
       const response = await fetch(API_URL, {
@@ -198,6 +196,7 @@ export default function Scanner() {
         body: JSON.stringify({
           matricula,
           docente_id: DOCENTE_ID,
+          metodo: "QR",
         }),
         signal: controller.signal,
       });

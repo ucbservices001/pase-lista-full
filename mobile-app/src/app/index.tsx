@@ -16,11 +16,8 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAttendance } from "../context/AttendanceContext";
+import { ASISTENCIAS_URL as API_URL, REQUEST_TIMEOUT_MS } from "../config/api";
 
-// Misma conexión directa que scanner.tsx. Ajusta ambos archivos si cambia el servidor.
-//const API_URL = "http://192.168.137.99:3000/api/asistencias";
-
-const API_URL = "https://pase-lista-full.onrender.com/api/asistencias";
 const DOCENTE_ID = "maestro-001";
 
 type ManualResult = {
@@ -104,7 +101,7 @@ export default function HomeScreen() {
     const controller = new AbortController();
     request.current = controller;
 
-    const timeout = setTimeout(() => controller.abort(), 15000);
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
     try {
       const response = await fetch(API_URL, {
@@ -115,6 +112,7 @@ export default function HomeScreen() {
         body: JSON.stringify({
           matricula: value,
           docente_id: DOCENTE_ID,
+          metodo: "Manual",
         }),
         signal: controller.signal,
       });
@@ -140,8 +138,6 @@ export default function HomeScreen() {
             ? "duplicate"
             : "error";
 
-      // Confirma la sesión solo después de un registro aceptado.
-      // Un duplicado no verifica la sesión: el backend lo comprueba antes.
       if (kind === "success") {
         setSessionState("Activa");
       } else if (payload.message === "No hay ninguna sesión QR activa para este docente") {
@@ -529,13 +525,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#EDF3FB",
   },
-
   page: {
     flexGrow: 1,
     padding: 16,
     alignItems: "center",
   },
-
   card: {
     width: "100%",
     maxWidth: 440,
@@ -545,26 +539,22 @@ const styles = StyleSheet.create({
     borderColor: "#D7E2F1",
     padding: 24,
   },
-
   brand: {
     color: "#111B30",
     fontSize: 20,
     fontWeight: "700",
   },
-
   title: {
     color: "#111B30",
     fontSize: 26,
     fontWeight: "800",
     marginTop: 4,
   },
-
   subtitle: {
     color: "#64748B",
     fontSize: 13,
     marginTop: 4,
   },
-
   session: {
     backgroundColor: "#EFF4FF",
     borderRadius: 15,
@@ -572,19 +562,16 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     marginTop: 20,
   },
-
   smallLabel: {
     color: "#64748B",
     fontSize: 11,
   },
-
   sessionTitle: {
     color: "#2563EB",
     fontSize: 18,
     fontWeight: "700",
     marginTop: 5,
   },
-
   scanner: {
     backgroundColor: "#202B3A",
     borderRadius: 17,
@@ -594,7 +581,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   qrMark: {
     width: 95,
     height: 62,
@@ -602,74 +588,63 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 17,
   },
-
   qrText: {
     color: "#FFFFFF",
     fontSize: 32,
     fontWeight: "800",
     letterSpacing: 2,
   },
-
   corner: {
     position: "absolute",
     width: 14,
     height: 14,
     borderColor: "#FFFFFF",
   },
-
   topLeft: {
     top: 0,
     left: 0,
     borderTopWidth: 3,
     borderLeftWidth: 3,
   },
-
   topRight: {
     top: 0,
     right: 0,
     borderTopWidth: 3,
     borderRightWidth: 3,
   },
-
   bottomLeft: {
     bottom: 0,
     left: 0,
     borderBottomWidth: 3,
     borderLeftWidth: 3,
   },
-
   bottomRight: {
     bottom: 0,
     right: 0,
     borderBottomWidth: 3,
     borderRightWidth: 3,
   },
-
   scanTitle: {
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "700",
     textAlign: "center",
   },
-
   scanHint: {
     color: "#C1CAD6",
     fontSize: 12,
     marginTop: 7,
     textAlign: "center",
   },
-
   scanAction: {
     color: "#DBEAFE",
     fontSize: 11,
     marginTop: 19,
     textAlign: "center",
   },
-
   pressed: {
     opacity: 0.75,
   },
-
   manualButton: {
     backgroundColor: "#EAF2FF",
     borderRadius: 11,
@@ -679,20 +654,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 18,
   },
-
   manualText: {
     color: "#2563EB",
     fontSize: 13,
     fontWeight: "700",
     textAlign: "center",
   },
-
   stats: {
     flexDirection: "row",
     gap: 10,
     marginTop: 20,
   },
-
   stat: {
     flex: 1,
     borderWidth: 1,
@@ -701,45 +673,37 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 12,
   },
-
   statValue: {
     fontSize: 21,
     fontWeight: "700",
   },
-
   statLabel: {
     color: "#64748B",
     fontSize: 10,
     marginTop: 3,
   },
-
   history: {
     marginTop: 24,
   },
-
   historyTitle: {
     color: "#111B30",
     fontSize: 16,
     fontWeight: "700",
   },
-
   emptyState: {
     paddingVertical: 16,
   },
-
   emptyTitle: {
     color: "#475569",
     fontSize: 13,
     fontWeight: "600",
   },
-
   emptyText: {
     color: "#64748B",
     fontSize: 12,
     lineHeight: 18,
     marginTop: 5,
   },
-
   historyItem: {
     borderWidth: 1,
     borderColor: "#E4EAF3",
@@ -748,47 +712,39 @@ const styles = StyleSheet.create({
     marginTop: 10,
     backgroundColor: "#FFFFFF",
   },
-
   historyHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     gap: 10,
   },
-
   historyStudent: {
     flex: 1,
   },
-
   historyName: {
     color: "#111B30",
     fontSize: 15,
     fontWeight: "700",
   },
-
   historyMatricula: {
     color: "#64748B",
     fontSize: 12,
     marginTop: 4,
   },
-
   historyStatus: {
     fontSize: 12,
     fontWeight: "700",
   },
-
   historyDetails: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: 10,
     gap: 8,
   },
-
   historyDetail: {
     color: "#64748B",
     fontSize: 12,
   },
-
   historyMethod: {
     color: "#2563EB",
     backgroundColor: "#EFF6FF",
@@ -798,7 +754,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
   },
-
   backdrop: {
     flex: 1,
     backgroundColor: "rgba(15,23,42,0.5)",
@@ -806,7 +761,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 24,
   },
-
   dialog: {
     width: "100%",
     maxWidth: 400,
@@ -815,14 +769,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     padding: 24,
   },
-
   dialogDescription: {
     color: "#64748B",
     fontSize: 13,
     lineHeight: 20,
     marginTop: 9,
   },
-
   inputLabel: {
     color: "#334155",
     fontSize: 13,
@@ -830,7 +782,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 8,
   },
-
   input: {
     borderWidth: 1,
     borderColor: "#CBD5E1",
@@ -842,33 +793,28 @@ const styles = StyleSheet.create({
     color: "#111B30",
     backgroundColor: "#F8FAFC",
   },
-
   resultBox: {
     marginTop: 16,
     padding: 14,
     backgroundColor: "#F8FAFC",
     borderRadius: 12,
   },
-
   resultHeading: {
     fontSize: 15,
     fontWeight: "700",
   },
-
   resultMessage: {
     color: "#475569",
     fontSize: 13,
     lineHeight: 20,
     marginTop: 6,
   },
-
   studentName: {
     color: "#111B30",
     fontSize: 15,
     fontWeight: "600",
     marginTop: 12,
   },
-
   submitButton: {
     minHeight: 48,
     backgroundColor: "#2563EB",
@@ -878,17 +824,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 18,
   },
-
   submitDisabled: {
     backgroundColor: "#64748B",
   },
-
   submitText: {
     color: "#FFFFFF",
     fontWeight: "600",
     textAlign: "center",
   },
-
   closeButton: {
     minHeight: 48,
     justifyContent: "center",

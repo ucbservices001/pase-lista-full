@@ -1,9 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 
-// Consulta existente de consultarAsistencias. Verifica el montaje en tus rutas.
-//const API_URL = "http://192.168.137.99:3000/api/asistencias";
-const API_URL = "https://pase-lista-full.onrender.com/api/asistencias";
+import { ASISTENCIAS_URL as API_URL, REQUEST_TIMEOUT_MS } from "../config/api";
+
 export const SCHOOL_TIME_ZONE = "America/Mexico_City";
 export type SessionState = "Sin verificar" | "Activa" | "No disponible";
 export type AttendanceMethod = "QR" | "Manual";
@@ -110,7 +109,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
           timeout = setTimeout(() => {
             reject(new Error("TIMEOUT"));
             controller.abort();
-          }, 15000);
+          }, REQUEST_TIMEOUT_MS);
         }),
       ]);
       if (!payload || payload.success !== true) throw new Error("INVALID_RESPONSE");
@@ -128,7 +127,7 @@ export function AttendanceProvider({ children }: { children: React.ReactNode }) 
       if (mounted.current && ticket === sequence.current) {
         const detail = cause instanceof Error ? cause.message : "";
         setError(detail === "TIMEOUT"
-          ? "El servidor no respondió en 15 segundos. Revisa la conexión e intenta actualizar."
+          ? `El servidor no respondió en ${REQUEST_TIMEOUT_MS / 1000} segundos. Revisa la conexión e intenta actualizar.`
           : detail.startsWith("HTTP_")
             ? `La consulta de asistencias devolvió HTTP ${detail.slice(5)}. Revisa la ruta del backend.`
             : detail === "INVALID_RESPONSE"
